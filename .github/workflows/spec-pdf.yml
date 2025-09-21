@@ -1,0 +1,40 @@
+name: Build SPEC.pdf from SPEC.md
+
+on:
+  push:
+    paths:
+      - "SPEC.md"
+      - ".github/workflows/spec-pdf.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-pdf:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Convert SPEC.md → SPEC.pdf
+        uses: docker://pandoc/latex:3.1.12
+        with:
+          args: >
+            --from=markdown
+            --toc
+            --pdf-engine=xelatex
+            -V geometry:margin=1in
+            -V mainfont="DejaVu Serif"
+            -V monofont="DejaVu Sans Mono"
+            -o SPEC.pdf
+            SPEC.md
+
+      - name: Commit SPEC.pdf if changed
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "docs: auto-generate SPEC.pdf from SPEC.md"
+          file_pattern: SPEC.pdf
